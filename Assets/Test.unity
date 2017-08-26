@@ -385,6 +385,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e4cd5f361b010c41b4d65edd77b3688, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  plantObj: {fileID: 1968412592350554, guid: 4310a9fd379a82b42884984d22ec0821, type: 2}
 --- !u!1 &975241447
 GameObject:
   m_ObjectHideFlags: 0
@@ -416,6 +417,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sun: {fileID: 769075963}
   secondsInFullDay: 720
+  intensityMultiplier: 1
   currentTimeOfDay: 0.33
   timeMultiplier: 1
   stars: {fileID: 1237292550}
@@ -462,6 +464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldObj: {fileID: 0}
+  worldMesh: {fileID: 0}
   material: {fileID: 2100000, guid: ccd86a14113ebb049ad6c164391dd9c0, type: 2}
   seasonalColors:
   - {r: 1, g: 1, b: 1, a: 1}

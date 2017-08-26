@@ -7,6 +7,8 @@ public class ColorBySeason : MonoBehaviour
 
     public Color[] colors;
     public Material mat;
+    Color targetColor;
+    float randomOffset = 5f;
 
     int season = 0;
 
@@ -18,6 +20,7 @@ public class ColorBySeason : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        mat.color = colors[Game.control.season];
+        targetColor = colors[Game.control.season];
+        mat.color = Color.Lerp(mat.color, targetColor, Time.deltaTime * Random.Range(0f, randomOffset));
     }
 }

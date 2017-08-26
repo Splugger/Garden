@@ -8,6 +8,11 @@ public class Player : MonoBehaviour
     Camera cam;
     GameObject selectionObj;
 
+    enum ToolType { shovel, seeds };
+    ToolType tool = ToolType.seeds;
+
+    public GameObject plantObj;
+
     // Use this for initialization
     void Start()
     {
@@ -20,7 +25,7 @@ public class Player : MonoBehaviour
     {
 
         RaycastHit hit;
-        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, 5f, LayerMask.NameToLayer("Terrain")))
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, 5f))
         {
             MeshCollider meshCollider = hit.collider as MeshCollider;
             if (meshCollider == null || meshCollider.sharedMesh == null)
@@ -30,18 +35,45 @@ public class Player : MonoBehaviour
             Vector3[] vertices = mesh.vertices;
             int[] triangles = mesh.triangles;
 
-            Vector3 p = vertices[triangles[hit.triangleIndex * 3 + 0]];
+            int index = triangles[hit.triangleIndex * 3 + 0];
+            Vector3 p = vertices[index];
 
             selectionObj.SetActive(true);
             selectionObj.transform.position = p;
 
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                tool = ToolType.shovel;
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                tool = ToolType.seeds;
+            }
+
             if (Input.GetButton("Fire1"))
             {
-                Game.control.world.map[(int)p.x, (int)p.z].SetDug(true);
+                switch (tool)
+                {
+                    case ToolType.shovel:
+                        Game.control.world.map[(int)p.x, (int)p.z].SetDug(true);
+                        break;
+                    case ToolType.seeds:
+                        Game.control.world.map[(int)p.x, (int)p.z].Plant(plantObj);
+                        break;
+                    default:
+                        break;
+                }
             }
             if (Input.GetButton("Fire2"))
             {
-                Game.control.world.map[(int)p.x, (int)p.z].SetDug(false);
+                switch (tool)
+                {
+                    case ToolType.shovel:
+                        Game.control.world.map[(int)p.x, (int)p.z].SetDug(false);
+                        break;
+                    default:
+                        break;
+                }
             }
             if (Input.GetKeyDown(KeyCode.P))
             {

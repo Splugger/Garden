@@ -9,6 +9,7 @@ public class World : MonoBehaviour
 
     public WorldPoint[,] map;
     public GameObject worldObj;
+    public MeshFilter worldMesh;
 
     int width = 100;
     int height = 100;
@@ -35,8 +36,15 @@ public class World : MonoBehaviour
         ColorBySeason colorBySeason = worldObj.AddComponent<ColorBySeason>();
         colorBySeason.colors = seasonalColors;
 
-        InvokeRepeating("SimulateWater", 0f, 0.1f);
+        InvokeRepeating("SimulateTiles", 0f, 0.1f);
         InvokeRepeating("Evaporate", 0f, 1f);
+    }
+
+    public void SetMeshVertex(int index, Vector3 offset)
+    {
+        List<Vector3> vertices = worldMesh.mesh.vertices.ToList();
+        vertices[index] += offset;
+        worldMesh.mesh.SetVertices(vertices);
     }
 
     void GenerateWorld()
@@ -47,6 +55,7 @@ public class World : MonoBehaviour
 
         worldObj = MeshGenerator.Generate(width, height, heightMap, heightScale, material);
         worldObj.layer = LayerMask.NameToLayer("Terrain");
+        worldMesh = worldObj.GetComponent<MeshFilter>();
 
         for (int x = 0; x < width; x++)
         {
@@ -56,7 +65,7 @@ public class World : MonoBehaviour
             }
         }
 
-        Rain(0.4f);
+        //Rain(0.4f);
     }
 
     void Rain(float amount)
@@ -93,24 +102,50 @@ public class World : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                Gizmos.color = new Color(map[x, y].water, map[x, y].water, map[x, y].water, 1f);
+                Gizmos.color = new Color(map[x, y].light, map[x, y].light, map[x, y].light, 1f);
                 Gizmos.DrawCube(map[x, y].position, Vector3.one);
             }
         }
     }*/
 
-    void SimulateWater()
+    void SimulateTiles()
     {
+        List<WorldPoint> points = new List<WorldPoint>();
         float[,] waterChange = new float[width, height];
 
+        //first pass
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                map[x, y].waterWeight = CalculateWaterWeight(map[x, y]);
+                WorldPoint point = map[x, y];
+                points.Add(point);
+                //water
+                point.waterWeight = CalculateWaterWeight(map[x, y]);
             }
         }
 
+        //light
+        WorldPoint[] pointsByTreeHeight = points.Where(q => q.plant != null).OrderBy(q => q.plant.size).ToArray();
+        foreach (WorldPoint point in pointsByTreeHeight)
+        {
+            int x = (int)point.position.x;
+            int y = (int)point.position.z;
+
+            //set light to sun level
+            point.light = Game.control.cycle.intensityMultiplier;
+
+            //block neighbor tiles
+            for (int neighborX = x - point.plant.numTilesBlocked; neighborX < x + point.plant.numTilesBlocked; neighborX++)
+            {
+                for (int neighborY = y - point.plant.numTilesBlocked; neighborY < y + point.plant.numTilesBlocked; neighborY++)
+                {
+                    Game.control.world.map[neighborX, neighborY].light *= 0.2f;
+                }
+            }
+        }
+
+        //second pass
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -119,6 +154,7 @@ public class World : MonoBehaviour
             }
         }
 
+        //third pass
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)

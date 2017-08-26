@@ -11,8 +11,11 @@ public class WorldPoint
     public float waterRetention = 0.01f;
     public float surfaceWaterHeight = 0.5f;
     public float waterWeight;
-    float light;
+    public float light;
     public bool isDug = false;
+    public float dugHeight = 0.2f;
+    public GameObject plantObj;
+    public Plant plant;
     GameObject holeObj;
     GameObject waterObj;
     MeshFilter mf;
@@ -27,8 +30,48 @@ public class WorldPoint
     }
     public void SetDug(bool state)
     {
-        isDug = state;
-        SetTile(true);
+        if (state != isDug)
+        {
+            isDug = state;
+            SetTile(true);
+
+            switch (state)
+            {
+                case true:
+                    ChangeMeshPoint(Vector3.down * dugHeight);
+                    UnPlant();
+                    break;
+                case false:
+                    ChangeMeshPoint(Vector3.up * dugHeight);
+                    break;
+            }
+        }
+    }
+
+    void ChangeMeshPoint(Vector3 offset)
+    {
+        int index = Game.control.world.worldMesh.mesh.vertices.ToList().FindIndex(q => q == position);
+        Game.control.world.SetMeshVertex(index, offset);
+    }
+
+    public void Plant(GameObject plantPrefab)
+    {
+        if (plant == null)
+        {
+            plantObj = GameObject.Instantiate(plantPrefab);
+            plantObj.transform.position = position;
+            plant = plantObj.GetComponent<Plant>();
+            plant.point = this;
+        }
+    }
+
+    public void UnPlant()
+    {
+        if (plant != null)
+        {
+            GameObject.Destroy(plantObj);
+            plant = null;
+        }
     }
 
     public void AddWater(float amount)
@@ -37,7 +80,7 @@ public class WorldPoint
         if (water > 0 && (water > surfaceWaterHeight || isDug))
         {
             float height = water - surfaceWaterHeight;
-            //if (isDug && height < surfaceWaterHeight) height = 0.1f;
+            if (isDug && height < surfaceWaterHeight) height = 0.1f;
             waterObj.SetActive(true);
             waterObj.transform.localScale = new Vector3(1f, height, 1f);
         }
@@ -168,7 +211,7 @@ public class WorldPoint
             holeObj = GameObject.Instantiate(Resources.Load(holeName) as GameObject);
             holeObj.transform.up = hit.normal;
             holeObj.transform.Rotate(new Vector3(0f, rotation, 0f));
-            holeObj.transform.position = position;
+            holeObj.transform.position = isDug? position : position + Vector3.up * dugHeight;
         }
     }
 }
